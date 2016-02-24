@@ -27,7 +27,7 @@
 *.out
 *.app
 
-build/
-bin/ 
-lib/ 
+build/*
+bin/* 
+lib/* 
 CMakeLists.txt.user

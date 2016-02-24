@@ -14,8 +14,17 @@ find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( PCL 1.7 REQUIRED )
 
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
+include_directories(
+    ${PCL_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/
+)
+
+set( thirdparty_libs
+    ${OpenCV_LIBS}
+    ${PCL_LIBRARY_DIRS}
+    ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+)
+
 add_definitions(${PCL_DEFINITIONS})
 
 # 二进制文件输出到bin

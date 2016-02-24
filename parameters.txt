@@ -1,0 +1,23 @@
+# 这是一个参数文件
+# 这虽然只是个参数文件，但是是很厉害的呢！
+# 去你妹的yaml! 我再也不用yaml了！简简单单多好！
+
+# 数据相关
+# 起始索引
+start_index=1
+# 数据所在目录
+data_source=/home/xiang/Documents/data/rgbd_dataset_freiburg1_room/
+
+# 相机内参
+
+camera.cx=318.6
+camera.cy=255.3
+camera.fx=517.3
+camera.fy=516.5
+camera.scale=5000.0
+camera.d0=0.2624
+camera.d1=-0.9531
+camera.d2=-0.0054
+camera.d3=0.0026
+camera.d4=1.1633
+
