@@ -1,1 +1,0 @@
-/home/xiang/Documents/code/rgbd-slam-tutor2/Thirdparty/DBoW2/bulid/CMakeFiles/DBoW2.dir
