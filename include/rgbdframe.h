@@ -47,6 +47,7 @@ public:
     // 特征
     vector<cv::KeyPoint>    keypoints;
     cv::Mat                 descriptor;
+    vector<cv::Point3f>     kps_3d;
 
     // 相机
     // 默认所有的帧都用一个相机模型（难道你还要用多个吗？）
