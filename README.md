@@ -19,6 +19,7 @@ This is the second version of RGBD SLAM tutor. Please visit [my blogs](http://ww
 
 3. Compile this project:
 
+
     mkdir build
     cmake ..
     make -j2
