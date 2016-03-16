@@ -28,5 +28,4 @@
 
 build/*
 bin/* 
-# lib/* 
 CMakeLists.txt.user

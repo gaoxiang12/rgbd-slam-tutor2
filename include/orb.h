@@ -1,9 +1,9 @@
 #ifndef ORB_H
 #define ORB_H
 
-#include "common.h"
+#include "common_headers.h"
 #include "rgbdframe.h"
-#include "ORB_SLAM2/include/ORBextractor.h"
+#include "Thirdparty/orbslam/include/ORBextractor.h"
 
 /**
  * OrbFeature
@@ -29,35 +29,31 @@ public:
     }
 
     // 提取特征，存放到frame的成员变量中
-    void detectFeatures( rgbd_tutor::Frame& frame ) const
+    void detectFeatures( rgbd_tutor::RGBDFrame::Ptr& frame ) const
     {
-        if (frame.rgb.channels() == 3)
+        cv::Mat gray = frame->rgb;
+
+        if (frame->rgb.channels() == 3)
         {
             // The BGR image
-            cv::Mat gray;
-            cv::cvtColor( frame.rgb, gray, cv::COLOR_BGR2GRAY );
-            (*extractor) ( gray, cv::Mat(), frame.keypoints, frame.descriptor );
-        }
-        else
-        {
-            (*extractor) ( frame.rgb, cv::Mat(), frame.keypoints, frame.descriptor );
+            cv::cvtColor( frame->rgb, gray, cv::COLOR_BGR2GRAY );
         }
 
+        vector<cv::KeyPoint>    kps;
+        cv::Mat     desps;
+        (*extractor) ( gray, cv::Mat(), kps, desps);
+        for ( size_t i=0; i<kps.size(); i++ )
+        {
+            rgbd_tutor::Feature feature;
+            feature.keypoint = kps[i];
+            feature.descriptor  = desps.row(i).clone();
+            feature.position = frame->project2dTo3d( kps[i].pt.x, kps[i].pt.y );
+            frame->features.push_back( feature );
+        }
     }
 
     // 匹配两个帧之间的特征描述
-    vector<cv::DMatch>  match( const rgbd_tutor::Frame& frame1, const rgbd_tutor::Frame& frame2 ) const
-    {
-        vector< vector<cv::DMatch> > matches_knn;
-        matcher->knnMatch( frame1.descriptor, frame2.descriptor, matches_knn, 2 );
-        vector< cv::DMatch > matches;
-        for ( size_t i=0; i<matches_knn.size(); i++ )
-        {
-            if (matches_knn[i][0].distance < knn_match_ratio * matches_knn[i][1].distance )
-            matches.push_back( matches_knn[i][0] );
-        }
-        return matches;
-    }
+    vector<cv::DMatch>  match( const rgbd_tutor::RGBDFrame::Ptr& frame1, const rgbd_tutor::RGBDFrame::Ptr& frame2 ) const;
 
 protected:
     shared_ptr<ORB_SLAM2::ORBextractor> extractor;

@@ -1,32 +1,60 @@
-#ifndef RGBDFRAME_H
-#define RGBDFRAME_H
+#ifndef FRAME_H
+#define FRAME_H
 
-#include "common.h"
+#include "common_headers.h"
 #include "parameter_reader.h"
+#include "feature.h"
+#include "utils.h"
 
 #include"Thirdparty/DBoW2/DBoW2/FORB.h"
 #include"Thirdparty/DBoW2/DBoW2/TemplatedVocabulary.h"
 
+#include <pcl/common/transforms.h>
+#include <pcl/point_types.h>
+#include <mutex>
+
+/**
+ * RGBDFrame 
+ * 该类记录了每个帧的信息。帧是slam的基本单位。
+ * 本身可以看作一个struct。
+ * 由于Pose可能被若干线程同时访问，需要加锁。
+ */
+
 namespace rgbd_tutor{
 
-//帧
-class RGBDFrame
+class RGBDFrame //帧
 {
 public:
     typedef shared_ptr<RGBDFrame> Ptr;
+    // 数据成员
+    int id  =-1;                //-1表示该帧不存在
+    cv::Mat rgb, depth;
+    //从当前帧到世界坐标系的变换
+    Eigen::Isometry3d   T_f_w = Eigen::Isometry3d::Identity();
+    std::mutex   mutexT;
 
+    // 特征
+    vector<Feature>     features;
+
+    // 相机
+    CAMERA_INTRINSIC_PARAMETERS camera;
+
+    // BoW回环
+    DBoW2::BowVector bowVec;
+
+    //  point cloud
+    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr	pointcloud =nullptr;
 
 public:
-    RGBDFrame() {}
     // 方法
-    // 给定像素点，求3D点坐标
-    cv::Point3f project2dTo3dLocal( const int& u, const int& v  ) const
+    // 将2d像素点投影到本地3d坐标
+    cv::Point3f project2dTo3d( int u, int v  ) const
     {
         if (depth.data == nullptr)
-            return cv::Point3f();
+            return cv::Point3f(0,0,0);
         ushort d = depth.ptr<ushort>(v)[u];
         if (d == 0)
-            return cv::Point3f();
+            return cv::Point3f(0,0,0);
         cv::Point3f p;
         p.z = double( d ) / camera.scale;
         p.x = ( u - camera.cx) * p.z / camera.fx;
@@ -34,54 +62,90 @@ public:
         return p;
     }
 
-public:
-    // 数据成员
-    int id  =-1;            //-1表示该帧不存在
+    // 将一组descriptor转换为一个矩阵
+    cv::Mat getAllDescriptors ( ) const
+    {
+        cv::Mat desp;
+        for ( size_t i=0; i<features.size(); i++ )
+        {
+            desp.push_back( features[i].descriptor );
+        }
+        return desp;
+    }
 
-    // 彩色图和深度图
-    cv::Mat rgb, depth;
-    // 该帧位姿
-    // 定义方式为：x_local = T * x_world 注意也可以反着定义；
-    Eigen::Isometry3d       T=Eigen::Isometry3d::Identity();
+    // 获取所有的descriptor并组成一个向量
+    vector<cv::Mat> getAllDescriptorsVec() const
+    {
+        vector<cv::Mat> desp;
+        for ( auto f:features )
+        {
+            desp.push_back( f.descriptor );
+        }
+        return desp;
+    }
 
-    // 特征
-    vector<cv::KeyPoint>    keypoints;
-    cv::Mat                 descriptor;
-    vector<cv::Point3f>     kps_3d;
+    // 获取所有的keypoints
+    vector<cv::KeyPoint>    getAllKeypoints() const
+    {
+        vector<cv::KeyPoint> kps;
+        for ( auto f:features )
+        {
+            kps.push_back( f.keypoint );
+        }
+        return kps;
+    }
 
-    // 相机
-    // 默认所有的帧都用一个相机模型（难道你还要用多个吗？）
-    CAMERA_INTRINSIC_PARAMETERS camera;
-
-    // BoW回环特征
-    // 讲BoW时会用到，这里先请忽略之
-    DBoW2::BowVector bowVec;
-
+    void setTransform( const Eigen::Isometry3d& T )
+    {
+        std::unique_lock<std::mutex> lck(mutexT);
+        T_f_w = T;
+    }
+    
+    Eigen::Isometry3d getTransform()  
+    {
+        std::unique_lock<std::mutex> lck(mutexT);
+        return T_f_w;
+    }
 };
 
-// FrameReader
-// 从TUM数据集中读取数据的类
+// FrameReader: 从数据集中顺序读取RGBDFrame
+// 现在支持TUM数据集。
 class FrameReader
 {
 public:
-    FrameReader( const rgbd_tutor::ParameterReader& para )
+    enum DATASET
+    {
+        NYUD=0,
+        TUM=1,
+    };
+
+    FrameReader( rgbd_tutor::ParameterReader& para, const DATASET& dataset_type = TUM )
         : parameterReader( para )
     {
-        init_tum( );
+        this->dataset_type = dataset_type;
+
+        switch( dataset_type )
+        {
+        case NYUD:
+            //TODO: 实现nyud数据读取接口
+            break;
+        case TUM:
+            init_tum( para );
+            break;
+        }
+
+        camera = para.getCamera();
     }
 
-    // 获得下一帧
     RGBDFrame::Ptr   next();
 
-    // 重置index
     void    reset()
     {
-        cout<<"重置 frame reader"<<endl;
         currentIndex = start_index;
     }
 
-    // 根据index获得帧
-    RGBDFrame::Ptr   get( const int& index )
+    // get by index
+    RGBDFrame::Ptr   get( int index )
     {
         if (index < 0 || index >= rgbFiles.size() )
             return nullptr;
@@ -90,26 +154,18 @@ public:
     }
 
 protected:
-    // 初始化tum数据集
-    void    init_tum( );
+    void    init_tum( ParameterReader& para );
 protected:
+    DATASET     dataset_type    =TUM;
 
-    // 当前索引
     int currentIndex =0;
-    // 起始索引
     int start_index  =0;
-
-    const   ParameterReader&    parameterReader;
-
-    // 文件名序列
     vector<string>  rgbFiles, depthFiles;
-
-    // 数据源
     string  dataset_dir;
+    const ParameterReader&  parameterReader;
 
-    // 相机内参
     CAMERA_INTRINSIC_PARAMETERS     camera;
 };
 
 };
-#endif // RGBDFRAME_H
+#endif // FRAME_H

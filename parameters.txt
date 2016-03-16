@@ -3,21 +3,74 @@
 # 去你妹的yaml! 我再也不用yaml了！简简单单多好！
 
 # 数据相关
-# 起始索引
+# 起始与终止索引
 start_index=1
+end_index=-1
 # 数据所在目录
-data_source=/home/xiang/Documents/data/rgbd_dataset_freiburg1_room/
+data_source=/home/xiang/Documents/data/rgbd_dataset_freiburg2_pioneer_slam2/
+#data_source=/home/xiang/Documents/data/rgbd_dataset_freiburg1_room/
+data_source=/home/xiang/Documents/data/rgbd_dataset_freiburg3_long_office_household/
+rgb_dir=rgb/
+rgb_extension=.png
+depth_dir=depth/
+depth_extension=.png
 
 # 相机内参
+# fr1
+#camera.cx=318.6
+#camera.cy=255.3
+#camera.fx=517.3
+#camera.fy=516.5
 
-camera.cx=318.6
-camera.cy=255.3
-camera.fx=517.3
-camera.fy=516.5
+# fr2
+#camera.cx=325.1
+#camera.cy=249.7
+#camera.fx=520.9
+#camera.fy=521.0
+
+# fr3
+camera.cx=320.1
+camera.cy=247.6
+camera.fx=535.4
+camera.fy=539.2
+
+camera.d0=0.2312
+camera.d1=-0.7849
+camera.d2=-0.0033
+camera.d3=-0.0001
+camera.d4=0.9172
+
 camera.scale=5000.0
-camera.d0=0.2624
-camera.d1=-0.9531
-camera.d2=-0.0054
-camera.d3=0.0026
-camera.d4=1.1633
 
+# ORB 参数
+orb_features=300
+orb_scale=1.2
+orb_levels=4
+orb_iniThFAST=20
+orb_minThFAST=8
+knn_match_ratio=0.8
+
+# PnP参数
+pnp_min_inliers=10
+pnp_min_matches=15
+
+# Tracker参数
+tracker_max_lost_frame=10
+tracker_ref_frames=5
+
+# pose graph
+nearby_keyframes=5
+keyframe_min_translation=0.25
+keyframe_min_rotation=0.25
+loop_accumulate_error=4.0
+local_accumulate_error=1.0
+
+
+# Looper参数
+looper_vocab_file=./vocab/ORBvoc.txt
+looper_min_sim_score=0.015
+looper_min_interval=60
+
+# Mapper参数
+mapper_resolution=0.04
+mapper_max_distance=5.0

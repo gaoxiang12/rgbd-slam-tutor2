@@ -1,31 +1,43 @@
 #include "rgbdframe.h"
-#include "common.h"
+#include "common_headers.h"
 #include "parameter_reader.h"
 
 using namespace rgbd_tutor;
 
 RGBDFrame::Ptr   FrameReader::next()
 {
-    if (currentIndex < start_index || currentIndex >= rgbFiles.size())
-        return nullptr;
-
-    RGBDFrame::Ptr   frame (new RGBDFrame);
-    frame->id = currentIndex;
-    frame->rgb = cv::imread( dataset_dir + rgbFiles[currentIndex]);
-    frame->depth = cv::imread( dataset_dir + depthFiles[currentIndex], -1);
-
-    if (frame->rgb.data == nullptr || frame->depth.data==nullptr)
+    switch (dataset_type) {
+    case NYUD:
+        //TODO 增加nyud的接口
+        break;
+    case TUM:
     {
-        // 数据不存在
-        return nullptr;
+        if (currentIndex < start_index || currentIndex >= rgbFiles.size())
+            return nullptr;
+
+        RGBDFrame::Ptr   frame (new RGBDFrame);
+        frame->id = currentIndex;
+        frame->rgb = cv::imread( dataset_dir + rgbFiles[currentIndex]);
+        frame->depth = cv::imread( dataset_dir + depthFiles[currentIndex], -1);
+
+        if (frame->rgb.data == nullptr || frame->depth.data==nullptr)
+        {
+            // 数据不存在
+            return nullptr;
+        }
+
+        frame->camera = this->camera;
+        currentIndex ++;
+        return frame;
+    }
+    default:
+        break;
     }
 
-    frame->camera = this->camera;
-    currentIndex ++;
-    return frame;
+    return nullptr;
 }
 
-void FrameReader::init_tum( )
+void FrameReader::init_tum( ParameterReader& para )
 {
     dataset_dir = parameterReader.getData<string>("data_source");
     string  associate_file  =   dataset_dir+"/associate.txt";
