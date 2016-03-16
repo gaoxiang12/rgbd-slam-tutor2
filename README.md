@@ -8,11 +8,14 @@ This is the second version of RGBD SLAM tutor. Please visit [my blogs](http://ww
 
 2. Compile third-party libs, including [DBoW2](https://github.com/raulmur/ORB_SLAM2) (for loop closure), a modified version of [g2o](https://github.com/RainerKuemmerle/g2o) (for solving pnp), and the OrbExtractor from [orb-slam2] (https://github.com/raulmur/ORB_SLAM2).
 
-They are all cmake projects, so just go into the directory and type:
+  They are all cmake projects, so just go into the directory and type:
 
     mkdir build
     cmake ..
     make -j2
+
+  For g2o you need to type *make install* to install it into /usr/local/ otherwise the FindG2O.cmake will not work.
+
 
 3. Compile this project:
 
