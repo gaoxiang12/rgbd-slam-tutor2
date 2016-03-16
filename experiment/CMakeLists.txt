@@ -2,7 +2,7 @@ set( build_libs
     ${OpenCV_LIBS}
     ${PCL_LIBRARIES}
     rgbd_tutor_lib
-    ${PROJECT_SOURCE_DIR}/Thirdparty/orbslam/lib/libORB_SLAM2.so
+    ${PROJECT_SOURCE_DIR}/Thirdparty/orbslam_modified/lib/libORB_SLAM2.so
     ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
     g2o_core g2o_types_slam3d g2o_solver_csparse g2o_stuff g2o_csparse_extension
     ${BOOST_LIBRARIES}
